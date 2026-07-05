@@ -1,0 +1,13 @@
+{
+  "name": "sistema-tickets",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sistema de tickets SOA — NestJS + Next.js",
+  "scripts": {
+    "build:shared": "pnpm --filter @sistema-tickets/shared-types build",
+    "build": "pnpm -r build"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
