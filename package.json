@@ -5,7 +5,10 @@
   "description": "Sistema de tickets SOA — NestJS + Next.js",
   "scripts": {
     "build:shared": "pnpm --filter @sistema-tickets/shared-types build",
-    "build": "pnpm -r build"
+    "build": "pnpm build:shared && pnpm -r --filter './apps/*' build",
+    "dev:tickets": "pnpm --filter @sistema-tickets/gestion-tickets dev",
+    "dev:asignacion": "pnpm --filter @sistema-tickets/asignacion-tecnicos dev",
+    "dev:coordinador": "pnpm --filter @sistema-tickets/coordinador-solicitudes dev"
   },
   "engines": {
     "node": ">=20"
