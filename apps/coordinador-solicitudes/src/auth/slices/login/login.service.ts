@@ -5,7 +5,7 @@ import { AuthResponseDto, LoginDto } from '@sistema-tickets/shared-types';
 /** Usuarios mock para demo — reemplazar con BD en producción. */
 const DEMO_USERS = [
   {
-    id: 'a1111111-1111-1111-1111-111111111111',
+    id: 'a1111111-1111-4111-8111-111111111111',
     email: 'soporte@empresa.com',
     password: 'demo123',
   },

@@ -8,7 +8,11 @@
     "build": "pnpm build:shared && pnpm -r --filter './apps/*' build",
     "dev:tickets": "pnpm --filter @sistema-tickets/gestion-tickets dev",
     "dev:asignacion": "pnpm --filter @sistema-tickets/asignacion-tecnicos dev",
-    "dev:coordinador": "pnpm --filter @sistema-tickets/coordinador-solicitudes dev"
+    "dev:coordinador": "pnpm --filter @sistema-tickets/coordinador-solicitudes dev",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:ps": "docker compose ps"
   },
   "engines": {
     "node": ">=20"

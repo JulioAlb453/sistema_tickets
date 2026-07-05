@@ -1,0 +1,141 @@
+name: sistema-tickets
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: st-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: st-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  gestion-tickets:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_FILTER: '@sistema-tickets/gestion-tickets'
+        APP_DIR: gestion-tickets
+        APP_PORT: 3001
+    container_name: st-gestion-tickets
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      NODE_ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tickets_db
+      REDIS_URL: redis://redis:6379
+      SIMULATE_CONFIRM_ERROR: ${SIMULATE_CONFIRM_ERROR:-false}
+    ports:
+      - '${GESTION_TICKETS_HOST_PORT:-3001}:3001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3001/health']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  asignacion-tecnicos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_FILTER: '@sistema-tickets/asignacion-tecnicos'
+        APP_DIR: asignacion-tecnicos
+        APP_PORT: 3002
+    container_name: st-asignacion-tecnicos
+    restart: unless-stopped
+    environment:
+      PORT: 3002
+      NODE_ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tecnicos_db
+    ports:
+      - '${ASIGNACION_HOST_PORT:-3002}:3002'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3002/health']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  coordinador-solicitudes:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_FILTER: '@sistema-tickets/coordinador-solicitudes'
+        APP_DIR: coordinador-solicitudes
+        APP_PORT: 3000
+    container_name: st-coordinador
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-cambiar-en-produccion}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: coordinador_db
+      TICKETS_SERVICE_URL: http://gestion-tickets:3001
+      ASIGNACION_SERVICE_URL: http://asignacion-tecnicos:3002
+      REDIS_URL: redis://redis:6379
+    ports:
+      - '${COORDINADOR_HOST_PORT:-3000}:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      gestion-tickets:
+        condition: service_healthy
+      asignacion-tecnicos:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  postgres_data:
